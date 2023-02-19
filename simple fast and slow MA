@@ -1,0 +1,66 @@
+// This source code is subject to the terms of the Mozilla Public License 2.0 at https://mozilla.org/MPL/2.0/
+// © seatrips
+
+//@version=5
+indicator("MA Crossover Buy/Sell Signals", shorttitle = "(-", overlay=true)
+
+src = close
+
+emaplot = input (true, title="Show EMA10 on chart")
+len = input(10, title="EMA 10 Length")
+
+confirmOpenL = close >= open
+confirmOpenS = close <= open
+
+out = ta.ema(src, len)
+up = out > out[1]
+down = out < out[1]
+
+smaplot200 = input (true, title="Show SMA200 on chart")
+len200 = input(200, title="SMA 200 Length")
+
+out200 = ta.sma(src, len200)
+up200 = out200 > out200[1]
+down200 = out200 < out200[1]
+
+fast_ma_length = input.int(18, "Fast Moving Average Length, SMA18")
+slow_ma_length = input.int(50, "Slow Moving Average Length, SMA50")
+
+fast_ma = ta.sma(close, fast_ma_length)
+slow_ma = ta.sma(close, slow_ma_length)
+ema = ta.ema(close, len)
+
+mycolor = ema > fast_ma ? color.rgb(5, 166, 252) : ema < fast_ma ? color.rgb(104, 231, 245) : na
+plot(out and emaplot ? out :na, title="EMA10", color=mycolor, linewidth = 3)
+
+mycolor200 = up200 ? color.rgb(7, 7, 247) : down200 ? color.rgb(5, 138, 248) : na
+plot(out200 and smaplot200 ? out200 :na, title="SMA200", color=mycolor200,style = plot.style_circles, linewidth = 3)
+
+plot(fast_ma, "SMA18", color=fast_ma > slow_ma ? color.rgb(243, 131, 3) : color.rgb(255, 243, 82), linewidth = 3)
+plot(slow_ma, "SMA50", color=slow_ma < fast_ma ? color.green : color.red, style = plot.style_circles, linewidth = 3)
+
+color candle_color = close > fast_ma ? color.green : close < fast_ma ? color.red : na
+barcolor(candle_color)
+
+buy_signal = ta.crossover(ema, fast_ma) and confirmOpenL
+sell_signal = ta.crossunder(ema, fast_ma) and confirmOpenS
+
+buyconfirm = ta.crossover(ema, slow_ma) and confirmOpenL
+sellconfirm = ta.crossunder(ema, slow_ma) and confirmOpenS
+
+plotshape(series=buy_signal, style=shape.arrowup, size=size.large, color=color.rgb(6, 226, 251), location=location.belowbar)
+plotshape(series=sell_signal, style=shape.arrowdown, size=size.large, color=color.rgb(235, 4, 243), location=location.abovebar)
+
+plotshape(series=buyconfirm, style=shape.arrowup, size=size.large, color=color.green, location=location.belowbar)
+plotshape(series=sellconfirm, style=shape.arrowdown, size=size.large, color=color.red, location=location.abovebar)
+
+
+
+
+
+
+
+
+
+
+
