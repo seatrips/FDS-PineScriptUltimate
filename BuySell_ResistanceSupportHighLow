@@ -1,0 +1,121 @@
+// This source code is subject to the terms of the Mozilla Public License 2.0 at https://mozilla.org/MPL/2.0/
+// © seatrips
+
+//@version=5
+indicator("MA Crossover Buy/Sell Signals and indicator Lines March-23", shorttitle = "CO", overlay=true)
+
+src = close
+
+confirmOpenL = close >= open
+confirmOpenS = close <= open
+
+lengthInputHL = input.int(150, "Length", minval = 2)
+
+len10 = input(10, title="EMA10 Lenght")
+len20 = input(20, title="SMA20 Lenght")
+len50 = input(50, title="SMA50 Lenght")
+len200 = input(200, title="SMA200 Lenght")
+
+fast_ma_length = input.int(18, "Fast MA Lenght")
+slow_ma_length = input.int(50, "Slow MA Lenght")
+
+fast_ma = ta.sma(close, fast_ma_length)
+slow_ma = ta.sma(close, slow_ma_length)
+
+ema10 = ta.ema(close, len10)
+sma20 = ta.sma(close, len20)
+sma50 = ta.sma(close, len50)
+sma200 = ta.sma(close, len200)
+
+out10 = ta.ema(src, len10)
+out20 = ta.ema(src, len20)
+out50 = ta.ema(src, len50)
+out200 = ta.ema(src, len200)
+
+up10 = out10 > out10[1]
+up20 = out20 > out20[1]
+up50 = out50 > out50[1]
+up200 = out200 > out200[1]
+
+down10 = out10 < out10[1]
+down20 = out20 < out20[1]
+down50 = out50 < out50[1]
+down200 = out200 < out200[1]
+
+ema10plot = input (defval = true, title="Show ema10 on chart")
+sma20plot = input (defval = true, title="Show sma20 on chart")
+sma50plot = input (defval = true, title="Show sma50 on chart")
+sma200plot = input (defval = true, title="Show sma200 on chart")
+
+lowest = ta.lowest(ta.sma(low, lengthInputHL), lengthInputHL)
+highest = ta.highest(ta.sma(high, lengthInputHL), lengthInputHL)
+
+lowestplot = input(defval = true, title="Plot Lowest RorS on the chart")
+highestplot = input(defval = true, title="Plot Highest RorS on the chart")
+
+highabove = close > highest
+lowabove = close > lowest
+
+color candle_color = close > fast_ma ? color.rgb(114, 170, 116) : close < fast_ma ? color.rgb(228, 104, 104) : na
+barcolor(candle_color)
+
+mycolor10 = up10 ? color.rgb(82, 171, 244) : down10 ? color.rgb(188, 222, 251) : na
+mycolor20 = up20 ? color.rgb(246, 3, 209) : down20 ? color.rgb(249, 190, 243) : na
+mycolor50 = up50 ? color.rgb(137, 33, 42) : down50 ? color.rgb(223, 98, 109) : na
+mycolor200 = up200 ? color.rgb(47, 55, 197) : down200 ? color.rgb(76, 122, 238) : na
+
+color bull = color.rgb(61, 250, 67)
+color bear = color.rgb(246, 59, 59)
+
+color hicolor = highabove ? bull : bear 
+color locolor = lowabove ? bull : bear 
+
+color highestcolor = hicolor
+color lowestcolor = locolor
+
+line1 = ema10
+line2 = sma20
+
+buy_signal = ta.crossover(ema10, fast_ma) and confirmOpenL
+sell_signal = ta.crossunder(ema10, fast_ma) and confirmOpenS
+
+buyconfirm = ta.crossover(ema10, slow_ma) and confirmOpenL
+sellconfirm = ta.crossunder(ema10, slow_ma) and confirmOpenS
+
+resistance = ta.highest(high, 90)
+support = ta.lowest(low, 90)
+
+resistanceH = ta.highest(high, lengthInputHL)
+supportL = ta.lowest(low, lengthInputHL)
+
+plot(resistance, color=color.new(#7d7c7c, 0), title='resistance', linewidth=3)
+plot(support, color=color.new(#414241, 0), title='support', linewidth=3)
+
+plot(lowestplot ? lowest : na, color=lowestcolor, title = "RorS", linewidth=2)
+plot(highestplot ? highest : na, color=highestcolor, title = "RorS", linewidth=2)
+
+p1PlotID = plot(out10 and ema10plot ? out10 : na, title="EMA10", color=mycolor10, linewidth = 2)
+p2PlotID = plot(out20 and sma20plot ? out20 : na, title="SMA20", color=mycolor20, linewidth = 2)
+
+fill(p1PlotID, p2PlotID, line1 > line2 ? color.new(#4caf4f, 80) : color.new(#ff5252, 80))
+
+plot(out50 and sma50plot ? out50 : na, title="SMA50", color=mycolor50, style = plot.style_circles, linewidth = 3)
+plot(out200 and sma200plot ? out200 : na, title="SMA200", color=mycolor200, style = plot.style_circles, linewidth = 3)
+
+plotshape(series=buy_signal, style=shape.arrowup, size=size.large, title = "LONG", color=color.rgb(6, 226, 251), location=location.belowbar)
+plotshape(series=sell_signal, style=shape.arrowdown, size=size.large, title = "SHORT", color=color.rgb(235, 4, 243), location=location.abovebar)
+
+plotshape(series=buyconfirm, style=shape.arrowup, size=size.large, title = "LONGC", color=color.green, location=location.belowbar)
+plotshape(series=sellconfirm, style=shape.arrowdown, size=size.large, title = "SHORTC", color=color.red, location=location.abovebar)
+
+alertcondition(buy_signal, title = "Long Signal", message = "Long signal has been activated")
+alertcondition(sell_signal, title = "Short Signal", message = "Short signal has been activated")
+
+alertcondition(buyconfirm, title = "Long Signal Confirmed")
+alertcondition(sellconfirm, title = "Short Signal Confirmed")
+
+
+
+
+
+
